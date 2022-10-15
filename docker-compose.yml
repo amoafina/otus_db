@@ -1,0 +1,20 @@
+version: '1.0'
+
+services:
+  online_shop:
+    image: mysql:8.0.15
+    environment:
+      - MYSQL_ROOT_PASSWORD=qq@fddSSv4545b
+    command: 
+      --init-file /init.sql
+    volumes:
+      - data:/var/lib/mysql
+      - ./init.sql:/init.sql
+      - ./custom.conf:/etc/mysql/conf.d
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
+
+volumes:
+  data:
