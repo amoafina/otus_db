@@ -199,7 +199,7 @@ CREATE TABLE `product` (
 	`image` VARCHAR(255) NULL DEFAULT NULL,
 	`manufacturer_id` INT(11) NOT NULL,
 	`price` DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
-	`date_available` DATE NOT NULL DEFAULT '0000-00-00',
+	`date_available` DATE NOT NULL,
 	`sort_order` INT(11) NOT NULL DEFAULT '0',
 	`status` TINYINT(1) NOT NULL DEFAULT '0',
 	`date_added` DATETIME NOT NULL,
@@ -227,8 +227,8 @@ CREATE TABLE `product_discount` (
 	`quantity` INT(4) NOT NULL DEFAULT '0',
 	`priority` INT(5) NOT NULL DEFAULT '1',
 	`price` DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
-	`date_start` DATE NOT NULL DEFAULT '0000-00-00',
-	`date_end` DATE NOT NULL DEFAULT '0000-00-00',
+	`date_start` DATE NOT NULL,
+	`date_end` DATE NOT NULL,
 	PRIMARY KEY (`id`)
 );
 CREATE TABLE `product_image` (
@@ -264,8 +264,8 @@ CREATE TABLE `product_special` (
 	`customer_group_id` INT(11) NOT NULL,
 	`priority` INT(5) NOT NULL DEFAULT '1',
 	`price` DECIMAL(15,4) NOT NULL DEFAULT '0.0000',
-	`date_start` DATE NOT NULL DEFAULT '0000-00-00',
-	`date_end` DATE NOT NULL DEFAULT '0000-00-00',
+	`date_start` DATE NOT NULL,
+	`date_end` DATE NOT NULL,
 	PRIMARY KEY (`id`)
 );
 CREATE TABLE `product_to_category` (
