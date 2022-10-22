@@ -1,8 +1,6 @@
-# Домашнее задание № 13
+    
 
-## 1. Группировки с ипользованием CASE, HAVING, ROLLUP, GROUPING()
-
-### Подсчет суммы заказов с типами оплаты "Онлайн" и "Не онлайн" по месяцам за 1 год
+    -- Подсчет суммы заказов с типами оплаты "Онлайн" и "Не онлайн" по месяцам за 1 год
     SELECT 
         YEAR(o.date_added) AS year,
         MONTH(o.date_added) AS month,
@@ -15,8 +13,7 @@
     GROUP BY YEAR(o.date_added), MONTH(o.date_added) WITH ROLLUP;
 
 
-### Подсчет суммы заказов с типами оплаты "Онлайн" и "Не онлайн" по месяцам с подсчетом итого
-    
+    -- Подсчет суммы заказов с типами оплаты "Онлайн" и "Не онлайн" по месяцам с подсчетом итого
     SET sql_mode = '';
     SELECT 
         IF(GROUPING(YEAR(o.date_added)), 'Все года', YEAR(o.date_added)) AS year,
@@ -28,8 +25,7 @@
     ORDER BY YEAR(o.date_added), MONTH(o.date_added);
 
 
-## 2. Максимальная и минимальная цена товара и кол-во товаров
-    
+    -- Максимальная и минимальная цена товара и кол-во товаров
     SELECT 
         MAX(p.price) AS max_price,
         MIN(p.price) AS min_price,
@@ -38,8 +34,7 @@
     WHERE p.price > 0;
 
 
-## 3. Подсчет кол-ва товаров в каждой категории
-
+    -- Подсчет кол-ва товаров в каждой категории
     SELECT 
         IF(GROUPING(cd.name), 'Все товары', cd.name) AS category_name,
         COUNT(p2c.product_id) AS product_count
@@ -49,8 +44,7 @@
     GROUP BY cd.name WITH ROLLUP;
 
 
-## 4. Товар с максимальной и минимальной ценой в каждой категории
-    
+    -- Товар с максимальной и минимальной ценой в каждой категории
     WITH temp_product AS (
         SELECT 
             cd.name AS category_name, 
