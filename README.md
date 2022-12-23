@@ -19,6 +19,8 @@
 
 ## 2. Схема БД
 
+### Схема БД проекта
+!['Схема БД проекта'](img/001.png)
 ### 2.1. conversation - Диалоги
 
 | Наименование поля | Тип поля | Комментарии
@@ -123,9 +125,6 @@
 | name  | VARCHAR(255)  | NOT NULL  |
 | filename  | VARCHAR(255)  | NOT NULL  |
 | date_added  | TIMESTAMP  | NOT NULL  |
-
-### Схема БД проекта
-!['Схема БД проекта'](img/001.png)
 
 
 ## 3. Создание кластера Percona XtraDB Cluster
