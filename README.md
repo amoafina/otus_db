@@ -126,3 +126,95 @@
 
 ### Схема БД проекта
 !['Схема БД проекта'](img/001.png)
+
+
+## 3. Создание кластера Percona XtraDB Cluster
+
+### 3.1. Создание каталога /pxc/config, в нем файл custom.cnf со следующим содержимым
+    [mysqld]
+    ssl-ca = /cert/ca.pem
+    ssl-cert = /cert/server-cert.pem
+    ssl-key = /cert/server-key.pem
+
+    [client]
+    ssl-ca = /cert/ca.pem
+    ssl-cert = /cert/client-cert.pem
+    ssl-key = /cert/client-key.pem
+
+    [sst]
+    encrypt = 4
+    ssl-ca = /cert/ca.pem
+    ssl-cert = /cert/server-cert.pem
+    ssl-key = /cert/server-key.pem
+
+### 3.2. Создание каталога /pxc/cert с вышеуказанными сертификатами, сгенерированными через mysql_ssl_rsa_setup 
+
+### 3.3. Создание сети
+    docker network create pxc-network
+
+### 3.4. Создание первой ноды
+    docker run -d -e MYSQL_ROOT_PASSWORD=wqeD33gDSF# -e CLUSTER_NAME=pxc-cluster -e MYSQL_INITDB=1 -e MYSQL_BOOTSTRAP=1 --name=node1 --network=pxc-network -p 53306:3306 -v <PATH_TO_PROJECT>\pxc\data\node1:/var/lib/mysql/data -v <PATH_TO_PROJECT>\pxc\cert:/cert -v <PATH_TO_PROJECT>\pxc\config:/etc/percona-xtradb-cluster.conf.d -it elchinoo/pxc:latest
+
+### 3.5. Создание второй ноды
+    docker run -d -e MYSQL_ROOT_PASSWORD=wqeD33gDSF# -e MYSQL_EXTRA_OPTS="--wsrep-sst-donor=node1 --wsrep-node-name=node2" --name=node2 --network=pxc-network -p 53307:3306 -v <PATH_TO_PROJECT>\pxc\data\node2:/var/lib/mysql/data -v <PATH_TO_PROJECT>\pxc\cert:/cert -v <PATH_TO_PROJECT>\pxc\config:/etc/percona-xtradb-cluster.conf.d -it elchinoo/pxc:latest
+
+### 3.6. Создание третьей ноды
+    docker run -d -e MYSQL_ROOT_PASSWORD=wqeD33gDSF# -e MYSQL_EXTRA_OPTS="--wsrep-sst-donor=node1 --wsrep-node-name=node3" --name=node3 --network=pxc-network -p 53308:3306 -v <PATH_TO_PROJECT>\pxc\data\node3:/var/lib/mysql/data -v <PATH_TO_PROJECT>\pxc\cert:/cert -v <PATH_TO_PROJECT>\pxc\config:/etc/percona-xtradb-cluster.conf.d -it elchinoo/pxc:latest
+
+### 3.7. Создание четвертой ноды
+    docker run -d -e MYSQL_ROOT_PASSWORD=wqeD33gDSF# -e MYSQL_EXTRA_OPTS="--wsrep-sst-donor=node1 --wsrep-node-name=node4" --name=node4 --network=pxc-network -p 53309:3306 -v <PATH_TO_PROJECT>\pxc\data\node4:/var/lib/mysql/data -v <PATH_TO_PROJECT>\pxc\cert:/cert -v <PATH_TO_PROJECT>\pxc\config:/etc/percona-xtradb-cluster.conf.d -it elchinoo/pxc:latest
+
+### 3.8. Создание пятой ноды
+    docker run -d -e MYSQL_ROOT_PASSWORD=wqeD33gDSF# -e MYSQL_EXTRA_OPTS="--wsrep-sst-donor=node1 --wsrep-node-name=node5" --name=node5 --network=pxc-network -p 53310:3306 -v <PATH_TO_PROJECT>\pxc\data\node5:/var/lib/mysql/data -v <PATH_TO_PROJECT>\pxc\cert:/cert -v <PATH_TO_PROJECT>\pxc\config:/etc/percona-xtradb-cluster.conf.d -it elchinoo/pxc:latest
+
+### 3.9. Загрузка дампа БД в первую ноду
+    docker cp <PATH_TO_PROJECT>\dump.sql node1:/tmp/
+
+    bin/sh# mysql -uroot -pwqeD33gDSF#
+
+    mysql> create database messenger;
+    mysql> source /tmp/dump.sql;
+
+## 4. Создание прокси
+
+### 4.1. Установка образа Proxysql
+
+    docker run -d -e MYSQL_ROOT_PASSWORD=wqeD33gDSF# -e DISCOVERY_SERVICE=10.20.2.4:2379 -e CLUSTER_NAME=pxc-cluster -e MYSQL_PROXY_USER=proxyuser -e MYSQL_PROXY_PASSWORD=s3cret --name=proxynode --network=pxc-network proxysql/proxysql
+
+### 4.2. Добавление нод в прокси и добавление пользователя
+
+    bin/sh# mysql -u admin -padmin -h 127.0.0.1 -P 6032
+
+    mysql> INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'0.0.0.0',53306);
+    mysql> INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'0.0.0.0',53307);
+    mysql> INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'0.0.0.0',53308);
+    mysql> INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'0.0.0.0',53309);
+    mysql> INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (0,'0.0.0.0',53310);
+
+    mysql> LOAD MYSQL SERVERS TO RUNTIME;
+
+    mysql> INSERT INTO mysql_users (username,password) VALUES ('sbuser','sbpass');
+
+    mysql> LOAD MYSQL USERS TO RUNTIME;
+    mysql> SAVE MYSQL USERS TO DISK;
+
+
+### 4.3. Добавление пользователя прокси в нодах
+   
+    bin/sh# mysql -uroot -pwqeD33gDSF#
+
+    mysql> CREATE USER 'sbuser'@'%' IDENTIFIED BY 'sbpass';
+    mysql>  GRANT ALL ON *.* TO 'sbuser'@'%';
+
+      
+ ### 4.4. Создание пользователя для мониторинга
+   
+    mysql> CREATE USER `proxysql`@`%` IDENTIFIED WITH mysql_native_password by 'Test12!33';
+    mysql> GRANT USAGE ON *.* TO "proxysql"@"%";
+
+    mysql@proxysql> UPDATE global_variables SET variable_value='proxysql' WHERE variable_name='mysql-monitor_username';
+    mysql@proxysql> UPDATE global_variables SET variable_value='Test12!33' WHERE variable_name='mysql-monitor_password';
+
+    mysql@proxysql> LOAD MYSQL VARIABLES TO RUNTIME;
+    mysql@proxysql> SAVE MYSQL VARIABLES TO DISK;
+
