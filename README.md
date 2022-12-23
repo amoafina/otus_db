@@ -129,6 +129,8 @@
 
 ## 3. Создание кластера Percona XtraDB Cluster
 
+### Схема кластера
+!['Схема кластера'](img/002.png)
 ### 3.1. Создание каталога /pxc/config, в нем файл custom.cnf со следующим содержимым
     [mysqld]
     ssl-ca = /cert/ca.pem
