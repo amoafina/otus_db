@@ -13,7 +13,7 @@
 Мессенджер должен хранить сообщения в зашифрованном виде  
 
 Для реализации данного проекта были выбраны:
-+ Кластер InnoDB Master + 2 Replica
++ Кластер Percona XtraDB Cluster + ProxySQL
 + Backend на PHP для демонстрации
 + Описание API с использованием Swagger (OpenAPI) 
 
